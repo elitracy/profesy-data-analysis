@@ -21,9 +21,6 @@ departments = [
 "UT"
 ]
 
-years = ["2016","2017","2018","2019","2020","2021"]
-
-
 for i in range(2016,2022):
     for j in range(1,4):
         for d in departments:
