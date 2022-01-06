@@ -1,4 +1,6 @@
 import os
+import pymongo
+from pymongo import MongoClient
 
 directory = "/mnt/c/Profesy/dataCollection/gpa_csvs"
 
@@ -20,7 +22,7 @@ def retrieve_data(filename):
 		# if lineList[0] == 'DEPARTMENT:':
 		#     #print("REACHED HERE")
 		#     department = lineList[1]
-		if line[4] == '-' and line[0] != '-': # means it's a line with course info
+		if line[4] == '-' and line[0] != '-': # means it's a line with course info (e.g. CSCE-121)
 			instructor = lineList[-1][0:-1]
 			department = lineList[0][0:4]
 			course_no = lineList[0][5:8]
@@ -82,8 +84,15 @@ for instructor in profs_dict.keys():
                 avgGPA = round(totalGPA / numSections, 3)
                 profs_dict[instructor][university][department][course_no]['avgGPA'] = str(avgGPA)
 
-print("TESTING WITH LEYK----------------------------------")
-print(profs_dict['LEYK T'])
+# setup initial connection to cluster 
+cluster = MongoClient("mongodb+srv://dylann39:<password>@cluster0.8bwmh.mongodb.net/myFirstDatabase?retryWrites=true&w=majority")
+db = cluster["profesy"]
+collection = db["professors"]
+
+collection.insert_one(profs_dict)
+
+# print("TESTING WITH AHMED----------------------------------")
+#print(profs_dict)
 	
 # profs_dict.clear()
-# print(profs_dict)
+#print(profs_dict)
