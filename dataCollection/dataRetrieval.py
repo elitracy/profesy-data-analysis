@@ -102,7 +102,7 @@ addToList(profs_dict, final_profs_list)
 
 
 # setup initial connection to cluster 
-cluster = MongoClient("mongodb+srv://dylann39:swimmer39@cluster0.8bwmh.mongodb.net/profesy?retryWrites=true&w=majority")
+cluster = MongoClient("mongodb+srv://<username>:<password>@cluster0.8bwmh.mongodb.net/profesy?retryWrites=true&w=majority")
 db = cluster["profesy"]
 collection = db["professors"]
 
