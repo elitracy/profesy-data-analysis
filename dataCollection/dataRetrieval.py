@@ -1,4 +1,5 @@
 import os
+import pprint
 import pymongo
 from pymongo import MongoClient
 
@@ -10,63 +11,72 @@ university = 'TAMU'
 department = ''
 instructor = ''
 course_no = ''
+name = ''
+overallGPA = ''
+final_profs_list = []
 
+#function to add all contents of the dictionary to a list for easier db access
+def addToList(dictionary, list):
+	for dic in dictionary.keys():
+		list.append(dictionary[dic])
+
+# function to manipulate and read all csv data
 def retrieve_data(filename):
 	#print(filename)
 	file = open(filename, "r+")
+	semester = ''
 	for line in file:
 		lineList = line.split(",")
-		# if lineList[5] == 'TEXAS A&M UNIVERSITY':
-		# 	#print("REACHED HERE")
-		# 	university = 'TAMU'
-		# if lineList[0] == 'DEPARTMENT:':
-		#     #print("REACHED HERE")
-		#     department = lineList[1]
+
+		if lineList[4][0:5] == 'GRADE':
+			semesterStringList = lineList[4].split(" ")
+			semester = semesterStringList[-2] + " " + semesterStringList[-1]
 		if line[4] == '-' and line[0] != '-': # means it's a line with course info (e.g. CSCE-121)
 			instructor = lineList[-1][0:-1]
+			name = instructor
 			department = lineList[0][0:4]
 			course_no = lineList[0][5:8]
-			if instructor in profs_dict and university in profs_dict[instructor] and department in profs_dict[instructor][university] and course_no in profs_dict[instructor][university][department]:
-				# if the same course taught by the same prof is encountered, then update all totals
-				newTotalGPA = float(profs_dict[instructor][university][department][course_no]['totalGPA']) + float(lineList[7])
-				profs_dict[instructor][university][department][course_no]['totalGPA'] = str(newTotalGPA)
-				newTotalSections = int(profs_dict[instructor][university][department][course_no]['numSections']) + 1
-				profs_dict[instructor][university][department][course_no]['numSections'] = str(newTotalSections)
-				newNumAs = int(profs_dict[instructor][university][department][course_no]['A']) + int(lineList[1])
-				profs_dict[instructor][university][department][course_no]['A'] = str(newNumAs)
-				newNumBs = int(profs_dict[instructor][university][department][course_no]['B']) + int(lineList[2])
-				profs_dict[instructor][university][department][course_no]['B'] = str(newNumBs)
-				newNumCs = int(profs_dict[instructor][university][department][course_no]['C']) + int(lineList[3])
-				profs_dict[instructor][university][department][course_no]['C'] = str(newNumCs)
-				newNumDs = int(profs_dict[instructor][university][department][course_no]['D']) + int(lineList[4])
-				profs_dict[instructor][university][department][course_no]['D'] = str(newNumDs)
-				newNumFs = int( profs_dict[instructor][university][department][course_no]['F']) + int(lineList[5])
-				profs_dict[instructor][university][department][course_no]['F'] = str(newNumFs)
-				newNumQs = int(profs_dict[instructor][university][department][course_no]['Q']) + int(lineList[11])
-				profs_dict[instructor][university][department][course_no]['Q'] = str(newNumQs)
-				newTotal = int(profs_dict[instructor][university][department][course_no]['Course Total']) + int(lineList[-2])
-				profs_dict[instructor][university][department][course_no]['Course Total'] = str(newTotal)
-				#print(profs_dict[instructor][university][department][course_no]['Course Total'])
+			course = department + course_no
+
 			if instructor not in profs_dict:
 				profs_dict[instructor] = {}
-			if university not in profs_dict[instructor]:
-				profs_dict[instructor][university] = {}
-			if department not in profs_dict[instructor][university]:
-				profs_dict[instructor][university][department] = {}
-			if course_no not in profs_dict[instructor][university][department]:
-				profs_dict[instructor][university][department][course_no] = {}
-				profs_dict[instructor][university][department][course_no]['avgGPA'] = '0'
-				profs_dict[instructor][university][department][course_no]['totalGPA'] = lineList[7]
-				profs_dict[instructor][university][department][course_no]['numSections'] = '1'
-				profs_dict[instructor][university][department][course_no]['A'] = lineList[1]
-				profs_dict[instructor][university][department][course_no]['B'] = lineList[2]
-				profs_dict[instructor][university][department][course_no]['C'] = lineList[3]
-				profs_dict[instructor][university][department][course_no]['D'] = lineList[4]
-				profs_dict[instructor][university][department][course_no]['F'] = lineList[5]
-				profs_dict[instructor][university][department][course_no]['Q'] = lineList[11]
-				profs_dict[instructor][university][department][course_no]['Course Total'] = lineList[-2]
+				profs_dict[instructor]['name'] = name
+				profs_dict[instructor]['university'] = university
+				profs_dict[instructor]['overallGPA'] = overallGPA
+				courseList = []
+				courseInfo = {'course' : course, 'semester' : semester, 'semGPA' : '0', 'totalGPA' : lineList[7], 'numSections' : '1', 'A' : lineList[1], 'B' : lineList[2], 'C' : lineList[3], 'D' : lineList[4], 'F' : lineList[5], 'Q' : lineList[11], 'CourseTotal' : lineList[-2]}
+				courseList.append(courseInfo)
+				profs_dict[instructor]['courses'] = courseList
+			else:
+				courseFound = False
+				for dic in profs_dict[instructor]['courses']:
+					if dic['course'] == course and dic['semester'] == semester:
+						courseFound = True
+						newTotalGPA = float(lineList[7]) + float(dic['totalGPA'])
+						dic['totalGPA'] = str(newTotalGPA)
+						newNumSections = int(dic['numSections']) + 1
+						dic['numSections'] = str(newNumSections)
+						newCourseTotal = int(dic['CourseTotal']) + int(lineList[-2])
+						dic['CourseTotal'] = str(newCourseTotal)
+						newA = int(dic['A']) + int(lineList[1])
+						dic['A'] = str(newA)
+						newB = int(dic['B']) + int(lineList[2])
+						dic['B'] = str(newB)
+						newC = int(dic['C']) + int(lineList[3])
+						dic['C'] = str(newC)
+						newD = int(dic['D']) + int(lineList[4])
+						dic['D'] = str(newD)
+						newF = int(dic['F']) + int(lineList[5])
+						dic['F'] = str(newF)
+						newQ = int(dic['Q']) + int(lineList[11])
+						dic['Q'] = str(newQ)
+				if not courseFound:
+					courseInfo = {'course' : course, 'semester' : semester, 'semGPA' : '0', 'totalGPA' : lineList[7], 'numSections' : '1', 'A' : lineList[1], 'B' : lineList[2], 'C' : lineList[3], 'D' : lineList[4], 'F' : lineList[5], 'Q' : lineList[11], 'CourseTotal' : lineList[-2]}
+					profs_dict[instructor]['courses'].append(courseInfo)
+				
+ 
 
-		#print(line.split(","))
+		# print(line.split(","))
 
 # iterating through all subdirectories and files, and retrieving + storing the data from each file into the global dict
 for subdir, dirs, files in os.walk(directory):
@@ -74,25 +84,34 @@ for subdir, dirs, files in os.walk(directory):
         filepath = subdir + os.sep + filename
         retrieve_data(filepath)
 
+
 #updating average GPAs
 for instructor in profs_dict.keys():
-    for university in profs_dict[instructor].keys():
-        for department in profs_dict[instructor][university].keys():
-            for course_no in profs_dict[instructor][university][department].keys():
-                totalGPA = float(profs_dict[instructor][university][department][course_no]['totalGPA'])
-                numSections = float(profs_dict[instructor][university][department][course_no]['numSections'])
-                avgGPA = round(totalGPA / numSections, 3)
-                profs_dict[instructor][university][department][course_no]['avgGPA'] = str(avgGPA)
+	newOverallGPA = 0
+	overallNumSections = 0
+	for dic in profs_dict[instructor]['courses']:
+		semGPA = round(float(dic['totalGPA']) / float(dic['numSections']), 3)
+		dic['semGPA'] = str(semGPA)
+		newOverallGPA += float(dic['totalGPA'])
+		overallNumSections += float(dic['numSections'])
+	overallGPA = round(newOverallGPA / overallNumSections, 3)
+	profs_dict[instructor]['overallGPA'] = str(overallGPA)
+
+#appending to list 
+addToList(profs_dict, final_profs_list)
+
 
 # setup initial connection to cluster 
-cluster = MongoClient("mongodb+srv://dylann39:<password>@cluster0.8bwmh.mongodb.net/myFirstDatabase?retryWrites=true&w=majority")
+cluster = MongoClient("mongodb+srv://dylann39:swimmer39@cluster0.8bwmh.mongodb.net/profesy?retryWrites=true&w=majority")
 db = cluster["profesy"]
 collection = db["professors"]
 
-collection.insert_one(profs_dict)
-
-# print("TESTING WITH AHMED----------------------------------")
-#print(profs_dict)
+collection.insert_many(final_profs_list)
 	
 # profs_dict.clear()
-#print(profs_dict)
+# print(profs_dict)
+pp = pprint.PrettyPrinter(width=41, compact=True)
+# pp.pprint(final_profs_list)
+# for i in final_profs_list:
+# 	if i['name'] == 'AHMED S':
+# 		pp.pprint(i)
