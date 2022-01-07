@@ -106,6 +106,7 @@ cluster = MongoClient("mongodb+srv://dylann39:swimmer39@cluster0.8bwmh.mongodb.n
 db = cluster["profesy"]
 collection = db["professors"]
 
+# insert list of dicts to db
 collection.insert_many(final_profs_list)
 	
 # profs_dict.clear()
