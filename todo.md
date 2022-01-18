@@ -4,7 +4,7 @@
 
 #### Backend:
 
-- [ ] encrypt passwords right when they submit them
+- [x] encrypt passwords right when they submit them
   - they should not leave the front end without being encrypted
   - js-sha256 library already imported
 
@@ -16,22 +16,22 @@
 
 <sup>./components/Signup.tsx
 
-- [ ] link parameters in RootStackParams.ts
-- [ ] add component to App.tsx
-- [ ] navigate from login (LandinPage.tsx)
-- [ ] send fetch (PUT) request to backend
+- [x] link parameters in RootStackParams.ts
+- [x] add component to App.tsx
+- [x] navigate from login (LandinPage.tsx)
+- [x] send fetch (PUT) request to backend
 
 #### Backend:
 
 <sup> localhost:8080/signup
 
-- [ ] parse arguments (req.query.x)
-- [ ] check for other users with same username or email
-  - [ ] send back fail message and tell user to pick another username/ email upon fail
-- [ ] on sign up succeed
-  - [ ] update database (insertOne) -> params are listed out in function in Signup.tsx (username, pass, email, name, favProfs[])
-  - [ ] insert empty favorite profs list
-- [ ] AsyncStorage.setItem("name", name that was entered)
+- [x] parse arguments (req.query.x)
+- [x] check for other users with same username or email
+  - [x] send back fail message and tell user to pick another username/ email upon fail
+- [x] on sign up succeed
+  - [x] update database (insertOne) -> params are listed out in function in Signup.tsx (username, pass, email, name, favProfs[])
+  - [x] insert empty favorite profs list
+- [x] AsyncStorage.setItem("name", name that was entered)
 
 ---
 
