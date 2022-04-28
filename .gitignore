@@ -1,6 +1,5 @@
-*/node_modules/*
 node_modules
-*/server/node_modules/*
-*/public/node_modules/*
+server/node_modules
+public/node_modules
+public/.expo/packager-info.json
 todo.md 
-
