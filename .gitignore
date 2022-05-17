@@ -2,5 +2,5 @@ node_modules
 server/node_modules
 public/node_modules
 public/.expo/packager-info.json
-public/.expo/**
+public/.expo/web/cache/development/babel-loader/*
 todo.md 
