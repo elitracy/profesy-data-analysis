@@ -7,7 +7,7 @@ const bodyParser = require("body-parser");
 const emailUtil = require("./email");
 const { Db } = require("mongodb");
 
-const PROF_SEARCH_LIMIT = 10;
+const SEARCH_LIMIT = 10;
 
 // FZF Function
 function escapeRegex(text) {
@@ -31,7 +31,7 @@ mongoUtil.connectToServer((err, client) => {
 
     profs
       .find({ name: regex })
-      .limit(PROF_SEARCH_LIMIT)
+      .limit(SEARCH_LIMIT)
       .toArray((err, results) => {
         res.send({ professors: results });
       });
@@ -145,29 +145,61 @@ mongoUtil.connectToServer((err, client) => {
       .aggregate([
         { $unwind: "$courses" },
         { $match: { "courses.course": { $in: [course] } } },
-        { $group: { _id: null, profList: { $addToSet: "$name" } } },
+        {
+          $group: {
+            _id: {
+              name: "$name",
+              gpa: "$overallGPA",
+            },
+          },
+        },
+        { $sort: { "_id.gpa": -1 } },
       ])
       .toArray((err, results) => {
+        console.log(results);
         if (err) console.error(err);
-        else res.send({ message: results });
+        else res.send({ courses: results });
       });
   });
 
   // SEARCH FOR COURSES
   app.get("/courses", (req, res) => {
     const course = req.query.course;
-    const regex = new RegExp(escapeRegex(course), "gi");
+    // const regex = new RegExp(escapeRegex(course.toLowerCase()), "gi");
 
     profs
       .aggregate([
         { $unwind: "$courses" },
-        { $match: { "courses.course": { $in: [regex] } } },
+        {
+          $match: {
+            "courses.course": {
+              $in: [new RegExp(`${course.toUpperCase()}*`)],
+            },
+          },
+        },
         { $group: { _id: null, courseList: { $addToSet: "$courses.course" } } },
       ])
       .toArray((err, results) => {
         if (err) console.error(err);
-        else res.send({ message: results });
+        else if (results.length > 0)
+          res.send({ message: results[0].courseList });
+        else res.send({ message: [] });
       });
+  });
+
+  app.get("/courseAndProf", (req, res) => {
+    const course = req.query.course;
+    const prof = req.query.prof;
+
+    profs.findOne(
+      {
+        $and: [{ name: prof }, { "courses.course": { $in: [course] } }],
+      },
+      (err, result) => {
+        if (err) console.error(err);
+        else res.send({ message: result });
+      }
+    );
   });
 
   app.listen(PORT, () => {
