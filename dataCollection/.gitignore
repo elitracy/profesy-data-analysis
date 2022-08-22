@@ -1,0 +1,18 @@
+#ignore txt files
+*.txt
+
+# ignore all pycache
+*.pyc
+
+#ignore all csv files
+*.csv
+
+#ignore all json files
+*.json
+
+#ignore all exe
+*.exe
+
+#ignore chrome driver
+chromedriver
+

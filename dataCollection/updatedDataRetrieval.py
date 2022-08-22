@@ -18,6 +18,7 @@ final_profs_list = []
 NO_INFO = "N/A"
 final_coursesList = []
 coursesDict = {}
+newUpdatedProfList = []
 
 # opening and creating access to the rmp info json file
 jsonFile = "tamuRmpInfo.json"
@@ -28,6 +29,31 @@ with open(jsonFile, "r") as rmpFile:
 def addToList(dictionary, list):
 	for dic in dictionary.keys():
 		list.append(dictionary[dic])
+
+# function to update the professors table to the new format
+def updateProfsInfo(final_profs_list, newUpdatedProfList):
+	for prof in final_profs_list:
+		for course in prof["courses"]:
+			courseName = course["course"]
+			if courseName not in prof["courseAverages"]:
+				continue
+			profAndCourseDict = {}
+			profAndCourseDict["name"] = prof["name"]
+			profAndCourseDict["overallGPA"] = prof["overallGPA"]
+			profAndCourseDict["course"] = courseName
+			profAndCourseDict["courseAverage"] = prof["courseAverages"][courseName]["courseAverage"]
+			profAndCourseDict["semester"] = course["semester"]
+			profAndCourseDict["semesterGPA"] = course["semGPA"]
+			profAndCourseDict["university"] = "TAMU"
+			profAndCourseDict["A"] = course["A"]
+			profAndCourseDict["B"] = course["B"]
+			profAndCourseDict["C"] = course["C"]
+			profAndCourseDict["D"] = course["D"]
+			profAndCourseDict["F"] = course["F"]
+			profAndCourseDict["Q"] = course["Q"]
+
+			newUpdatedProfList.append(profAndCourseDict)
+
 
 # function to update course averages for each prof
 def populateCourseAvgInfo(final_profs_list):
@@ -122,21 +148,6 @@ def retrieve_data(filename):
 				courseList.append(courseInfo)
 				profs_dict[instructor]['courses'] = courseList
 				
-				if instructor in rmpInfo:
-					profs_dict[instructor]['RMP'] = rmpInfo[instructor]
-				else:
-					profs_dict[instructor]['RMP'] = { 
-						"numOccurrences" : 1,
-						"occurrence1" : {
-							"reviews" : [{"course" : NO_INFO, "date" : NO_INFO, "comments" : NO_INFO}],
-							"profUrl" : NO_INFO,
-							"department" : NO_INFO,
-							"overallRating" : NO_INFO,
-							"numRatings" : NO_INFO,
-							"wouldTakeAgain" : NO_INFO,
-							"difficulty" : NO_INFO
-						}
-					}
 				
 			else:
 				courseFound = False
@@ -214,21 +225,25 @@ populateCourseAvgInfo(final_profs_list)
 # updating course averages
 updateCourseAvgs(final_profs_list)
 
+# reformatting db to have each prof and semester on a line
+updateProfsInfo(final_profs_list, newUpdatedProfList)
+
 # pprint(final_coursesList)
 # setup initial connection to cluster 
 print("Enter mongodb username:", end=" ")
 username = input()
 print("Enter mongodb password:", end=" ")
 password = input()
-cluster = MongoClient("mongodb+srv://" + str(username) + ":" + str(password) + "@cluster0.8bwmh.mongodb.net/profesy?retryWrites=true&w=majority")
-db = cluster["profesy"]
+# cluster = MongoClient("mongodb+srv://" + str(username) + ":" + str(password) + "@cluster0.8bwmh.mongodb.net/profesyV2?retryWrites=true&w=majority")
+cluster = MongoClient("mongodb+srv://profesyv2:" + password + "@profesydbv2.ucfy4ol.mongodb.net/?retryWrites=true&w=majority")
+db = cluster["profesyV2"]
 
 # -----------------------------------
 # TO IMPORT INTO PROFESSORS COLLECTION
 # -----------------------------------
 
 collection = db["professors"]
-collection.insert_many(final_profs_list)
+collection.insert_many(newUpdatedProfList)
 
 # -----------------------------------
 # TO IMPORT INTO COURSES COLLECTION
